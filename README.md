@@ -1,5 +1,6 @@
 This analysis of the Orezone Gold Corp is part of the investment project at the Stockholm Student Investment Firm. The models in this repository are my own independent works to later constitute a more holistic assessment by the Natural Resources team.
-Structure:
+
+**Structure:**
 1. Regression of the most recent EV on Gold Reserves and Resources: aims to retrieve a relationship and thus explains market valuation of gold mining companies based on their gold reserves & resources.
 2. NAV modelling: estimate the net asset value of Orezone & its 8 comparable firms using projected production.
 3. Comparable analysis: from the results of the regressions, comparables are chosen based on similarity in ROE & Gold reserves & resources for comparing across multiples.
