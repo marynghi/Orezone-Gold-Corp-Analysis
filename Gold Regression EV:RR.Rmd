@@ -12,7 +12,7 @@ library(stargazer)
 library(readxl)
 ```
 
-```{r echo=FALSE}
+```{r import data, echo=FALSE}
 df_fin1 <- read_excel("/Users/ThaoNghi/Documents/finance/Orezone Gold/Comparables/Gold 1 for regression.xls", sheet = 1, na = "-")
 df_gold1 <- read_excel("/Users/ThaoNghi/Documents/finance/Orezone Gold/Comparables/Gold 1 for regression.xls", sheet = 8, na = "-")
 df_fin2 <- read_excel("/Users/ThaoNghi/Documents/finance/Orezone Gold/Comparables/Gold 2.xls", sheet = 1, na = "-")
@@ -21,7 +21,7 @@ df_fin3 <- read_excel("/Users/ThaoNghi/Documents/finance/Orezone Gold/Comparable
 df_gold3 <- read_excel("/Users/ThaoNghi/Documents/finance/Orezone Gold/Comparables/Gold 3.xls", sheet = 8, na = "-")
 ```
 
-```{r echo=FALSE}
+```{r data merge & clean, echo=FALSE}
 df_fin <- rbind(df_fin1, df_fin2, df_fin3)
 df_gold <- rbind(df_gold1, df_gold2, df_gold3)
 merged_left <- merge(df_fin, df_gold, by = "Company Name", all.x = TRUE)
@@ -31,7 +31,7 @@ df <- df[!is.infinite(df$`FY P&P Ore Reserves (in '000s of T)`) & !is.infinite(d
 df <- df[!is.na(df$`FY Measured and Indicated Ore Resources (in '000s of T)`) & !is.na(df$`FY Measured and Indicated Resources Grade (g/T)`),]
 ```
 
-```{r echo=FALSE}
+```{r veri, echo=FALSE}
 df$`FY P&P Ore Reserves (in '000s of T)` <- as.numeric(gsub(",", "", df$`FY P&P Ore Reserves (in '000s of T)`))
 df$`FY P&P Reserves Grade (g/T)` <- as.numeric(gsub(",", "", df$`FY P&P Reserves Grade (g/T)`))
 sum(is.na(df$`FY P&P Ore Reserves (in '000s of T)`))
@@ -39,13 +39,13 @@ sum(is.na(df$`FY P&P Reserves Grade (g/T)`))
 ```
 
 
-```{r echo=FALSE}
+```{r mod, echo=FALSE}
 df$'PP' <- df$`FY P&P Ore Reserves (in '000s of T)`*1000*df$`FY P&P Reserves Grade (g/T)`*0.035274
 df$'MI' <- df$`FY Measured and Indicated Ore Resources (in '000s of T)`*1000*df$`FY Measured and Indicated Resources Grade (g/T)`*0.035274
 df$"EV" <- df$`Total Enterprise Value Latest`*1000000
 ```
 
-```{r}
+```{r distribution, echo = FALSE}
 ggplot(df, aes(x = log(PP))) +
   geom_histogram(bins = 25)
 ggplot(df, aes(x = log(MI))) +
@@ -54,12 +54,12 @@ ggplot(df, aes(x = log(EV))) +
   geom_histogram(bins = 20)
 ```
 
-```{r echo=FALSE}
+```{r regression, echo=FALSE}
 model <- lm(EV ~ PP + MI, data = df)
 summary(model)
 stargazer(model, type = "text", digits = 4)
 ```
-```{r echo=FALSE}
+```{r visual, echo=FALSE}
 ggplot(df, aes(x = log(MI), y = log(EV))) +
   geom_point() + geom_smooth(method = "lm", color = "blue")
   labs(title = "Regression Plot: EV ~ PP + MI", x = "MI", y = "EV")
