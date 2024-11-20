@@ -1,0 +1,72 @@
+---
+title: "Regression of Gold Companies' EV on Reserves & Resrouces"
+author: 'Mary Nghi Le'
+date: "2024-11-20"
+output: pdf_document
+df_print: paged
+geometry: margin=2cm
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.width = 8, fig.height = 5, fig.align = 'center',comment = NA)
+library(ggplot2)
+library(stargazer)
+library(readxl)
+```
+
+```{r echo=FALSE}
+df_fin1 <- read_excel("/Users/ThaoNghi/Documents/finance/Orezone Gold/Comparables/Screened Gold 1.xls", sheet = 1, na = "-")
+df_gold1 <- read_excel("/Users/ThaoNghi/Documents/finance/Orezone Gold/Comparables/Screened Gold 1.xls", sheet = 8, na = "-")
+df_fin2 <- read_excel("/Users/ThaoNghi/Documents/finance/Orezone Gold/Comparables/Screened Gold 2.xls", sheet = 1, na = "-")
+df_gold2 <- read_excel("/Users/ThaoNghi/Documents/finance/Orezone Gold/Comparables/Screened Gold 2.xls", sheet = 8, na = "-")
+df_fin3 <- read_excel("/Users/ThaoNghi/Documents/finance/Orezone Gold/Comparables/Screened Gold 3.xls", sheet = 1, na = "-")
+df_gold3 <- read_excel("/Users/ThaoNghi/Documents/finance/Orezone Gold/Comparables/Screened Gold 3.xls", sheet = 8, na = "-")
+```
+
+```{r echo=FALSE}
+df_fin <- rbind(df_fin1, df_fin2, df_fin3)
+df_gold <- rbind(df_gold1, df_gold2, df_gold3)
+merged_left <- merge(df_fin, df_gold, by = "Company Name", all.x = TRUE)
+df <- merged_left[!is.na(merged_left$`Total Enterprise Value Latest`),]
+df <- df[!is.na(df$`FY P&P Ore Reserves (in '000s of T)`) & !is.na(df$`FY P&P Reserves Grade (g/T)`), ]
+df <- df[!is.infinite(df$`FY P&P Ore Reserves (in '000s of T)`) & !is.infinite(df$`FY P&P Reserves Grade (g/T)`), ]
+df <- df[!is.na(df$`FY Measured and Indicated Ore Resources (in '000s of T)`) & !is.na(df$`FY Measured and Indicated Resources Grade (g/T)`),]
+```
+
+```{r echo=FALSE}
+df$`FY P&P Ore Reserves (in '000s of T)` <- as.numeric(gsub(",", "", df$`FY P&P Ore Reserves (in '000s of T)`))
+df$`FY P&P Reserves Grade (g/T)` <- as.numeric(gsub(",", "", df$`FY P&P Reserves Grade (g/T)`))
+#sum(is.na(df$`FY P&P Ore Reserves (in '000s of T)`))
+#sum(is.na(df$`FY P&P Reserves Grade (g/T)`))
+```
+
+
+```{r echo=FALSE}
+df$'PP' <- df$`FY P&P Ore Reserves (in '000s of T)`*1000*df$`FY P&P Reserves Grade (g/T)`*0.035274
+df$'MI' <- df$`FY Measured and Indicated Ore Resources (in '000s of T)`*1000*df$`FY Measured and Indicated Resources Grade (g/T)`*0.035274
+df$"EV" <- df$`Total Enterprise Value Latest`*1000000
+```
+
+```{r}
+ggplot(df, aes(x = log(PP))) +
+  geom_histogram(bins = 25) + labs(title = "Distribution of Proven & Probabble Reserves", x = "P&P Reserves (oz)") +
+  theme_minimal() + theme(plot.title = element_text(face = "bold", size = 14, hjust = 0.5))
+ggplot(df, aes(x = log(MI))) +
+  geom_histogram(bins = 25) + labs(title = "Distribution of Measured & Indicated Reserves", x = "M&I Reserves (oz)") +
+  theme_minimal() + theme(plot.title = element_text(face = "bold", size = 14, hjust = 0.5))
+```
+**Regression result:**
+```{r echo=FALSE, comment=""}
+model <- lm(EV ~ PP + MI, data = df)
+summary(model)
+```
+Regression indicates that with one ounce increase in gold P&P reserves, EV would increase by 69 USD. With one ounce increase in M&I reserves, EV would jump by 194 USD.
+
+Regression is ran on 96 observations, returning an R-squared of 56.5%, meaning that this model can explain 56.5% of stock variation for gold mining comps.
+
+```{r echo=FALSE, message=FALSE, comment=""}
+ggplot(df, aes(x = log(MI), y = log(EV))) +
+  geom_point() + geom_smooth(method = "lm", color = "blue")
+  labs(title = "Regression Plot: EV ~ PP + MI", x = "MI", y = "EV")
+```
+
